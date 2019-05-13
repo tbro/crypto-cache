@@ -1,0 +1,52 @@
+version: '3'
+services:
+
+  bitcoind:
+    image: ruimarinho/bitcoin-core:0.15-alpine
+    ports:
+      - "20000:20000"
+      - "20001:20001"
+    command:
+      -printtoconsole
+      -regtest=1
+      -rpcuser=bitpaytest
+      -rpcpassword=local321
+      -rpcallowip=172.17.0.0/8
+      -port=20000
+      -rpcport=20001
+
+  bitcoinabcd:
+    image: uphold/bitcoin-abc:0.17-alpine
+    ports:
+      - "30000:30000"
+      - "30101:30101"
+    command:
+      -rpcallowip=172.17.0.0/8
+      -printtoconsole
+      -regtest=1
+      -txindex=1
+      -rpcuser=bitpaytest
+      -rpcpassword=local321
+      -port=30000
+      -rpcport=30101
+
+  ganache-cli:
+    image: trufflesuite/ganache-cli:v6.4.2
+    ports:
+      - "8545:8545"
+    command:
+      --port=8545
+      --blockTime 5 
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.3
+    ports:
+      - "2379:2379"
+    command:
+      - etcd
+      - -listen-client-urls
+      - http://0.0.0.0:2379
+      - -advertise-client-urls
+      - http://0.0.0.0:2379
+    volumes:
+      - /usr/share/ca-certificates/:/etc/ssl/certs
