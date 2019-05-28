@@ -4,6 +4,7 @@
   "description": "cache, proxy layer for crypto nodes",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "npx mocha test/*.js",
     "test:etcd": "CRYPTO_STORE=etcd npx mocha test/*.js",
     "watch": "npx pm2 start index.js --watch",

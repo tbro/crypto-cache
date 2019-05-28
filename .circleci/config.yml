@@ -1,0 +1,77 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: circleci/node:8
+      - image: quay.io/coreos/etcd:v3.3
+        command:
+          - etcd
+          - -listen-client-urls
+          - http://0.0.0.0:2379
+          - -advertise-client-urls
+          - http://0.0.0.0:2379
+      - image: ruimarinho/bitcoin-core:0.15-alpine
+        command:
+          - -rpcallowip=172.17.0.0/8
+          - -printtoconsole
+          - -regtest=1
+          - -rpcuser=bitpaytest
+          - -rpcpassword=local321
+          - -port=20000
+          - -rpcport=20001
+      - image: uphold/bitcoin-abc:0.17-alpine
+        command:
+          - -rpcallowip=172.17.0.0/8
+          - -printtoconsole
+          - -regtest=1
+          - -txindex=1
+          - -rpcuser=bitpaytest
+          - -rpcpassword=local321
+          - -port=30000
+          - -rpcport=30101
+      - image: trufflesuite/ganache-cli:v6.4.2
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          - v1-dependencies-
+
+      - run: yarn install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run:
+          command: yarn test
+          name: test-fake
+
+      - run:
+          command: yarn test:etcd
+          name: test-etcd
+
+  build:
+    docker:
+      - image: docker:stable-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: apk --no-cache add curl 
+      - run: |
+          docker build -t crypto-cache:$CIRCLE_BRANCH .
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test 
