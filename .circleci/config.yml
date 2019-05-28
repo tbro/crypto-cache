@@ -57,7 +57,7 @@ jobs:
           command: yarn test:etcd
           name: test-etcd
 
-  build:
+  build-deploy:
     docker:
       - image: docker:stable-git
     steps:
@@ -66,12 +66,15 @@ jobs:
       - run: apk --no-cache add curl 
       - run: |
           docker build -t crypto-cache:$CIRCLE_BRANCH .
+          docker login --username=_ --password=$DOCKER_REGISTRY_KEY registry.heroku.com
+          docker tag crypto-cache:$CIRCLE_BRANCH registry.heroku.com/crypto-cache/web
+          docker push registry.heroku.com/crypto-cache/web
 
 workflows:
   version: 2
-  build-deploy:
+  test-build-deploy:
     jobs:
       - test
-      - build:
+      - build-deploy:
           requires:
             - test 
