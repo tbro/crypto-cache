@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# Smoke 'em if you got 'em
+
+PKG=$(cat package.json | jq .version | tr -d '"')
+SERVICE=$(docker run --network container:crypto-cache appropriate/curl \
+  --silent http://localhost:5000/version)
+[ $PKG = $SERVICE ]

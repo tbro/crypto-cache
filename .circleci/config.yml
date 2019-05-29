@@ -62,10 +62,14 @@ jobs:
       - image: docker:stable-git
     steps:
       - checkout
-      - setup_remote_docker
-      - run: apk --no-cache add curl 
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: apk --no-cache add jq
       - run: |
           docker build -t crypto-cache:$CIRCLE_BRANCH .
+          docker run --name crypto-cache -p5000:5000 -d crypto-cache:$CIRCLE_BRANCH
+          ./bin/smoke
+      - run: |
           docker login --username=_ --password=$DOCKER_REGISTRY_KEY registry.heroku.com
           docker tag crypto-cache:$CIRCLE_BRANCH registry.heroku.com/crypto-cache/web
           docker push registry.heroku.com/crypto-cache/web
